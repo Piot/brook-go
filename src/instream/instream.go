@@ -23,6 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
+// Package instream ...
 package instream
 
 import (
@@ -33,6 +35,7 @@ import (
 	"fmt"
 )
 
+// InStream : Read octet stream
 type InStream struct {
 	buffer bytes.Buffer
 }

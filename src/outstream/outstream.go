@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+// Package outstream ...
 package outstream
 
 import (
@@ -33,6 +34,7 @@ import (
 	"fmt"
 )
 
+// OutStream : Write to octet stream
 type OutStream struct {
 	buffer bytes.Buffer
 }
@@ -44,8 +46,8 @@ func New() *OutStream {
 }
 
 // Feed : Adds octets to stream
-func (stream *OutStream) Feed(octets []byte) error {
-	lengthWritten, err := stream.buffer.Write(octets)
+func (s *OutStream) Feed(octets []byte) error {
+	lengthWritten, err := s.buffer.Write(octets)
 	if err != nil {
 		return err
 	}
@@ -55,44 +57,44 @@ func (stream *OutStream) Feed(octets []byte) error {
 		return err
 	}
 	if false {
-		hexPayload := hex.Dump(stream.buffer.Bytes())
+		hexPayload := hex.Dump(s.buffer.Bytes())
 		fmt.Printf("Buffer is now:%s\n", hexPayload)
 	}
 	return nil
 }
 
 // WriteUint32 : Writes an unsigned 32-bit integer to stream
-func (stream *OutStream) WriteUint32(v uint32) error {
+func (s *OutStream) WriteUint32(v uint32) error {
 	temp := make([]byte, 4)
 	binary.BigEndian.PutUint32(temp, v)
-	stream.Feed(temp)
+	s.Feed(temp)
 	return nil
 }
 
 // WriteUint16 : Writes an unsigned 16-bit integer to stream
-func (stream *OutStream) WriteUint16(v uint16) error {
+func (s *OutStream) WriteUint16(v uint16) error {
 	temp := make([]byte, 2)
 	binary.BigEndian.PutUint16(temp, v)
-	stream.Feed(temp)
+	s.Feed(temp)
 	return nil
 }
 
 // WriteUint8 : Writes an octet to stream
-func (stream *OutStream) WriteUint8(v uint8) error {
+func (s *OutStream) WriteUint8(v uint8) error {
 	temp := make([]byte, 1)
 	temp[0] = v
-	stream.Feed(temp)
+	s.Feed(temp)
 	return nil
 }
 
 // WriteOctets : Writes octets to stream
-func (stream *OutStream) WriteOctets(octets []byte) error {
-	return stream.Feed(octets)
+func (s *OutStream) WriteOctets(octets []byte) error {
+	return s.Feed(octets)
 }
 
 // Octets : Gets the written octets
-func (stream *OutStream) Octets() []byte {
-	return stream.buffer.Bytes()
+func (s *OutStream) Octets() []byte {
+	return s.buffer.Bytes()
 }
 
 // String : Outputs a debug string of the stream
