@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-
 // Package instream ...
 package instream
 
@@ -103,4 +102,8 @@ func (stream *InStream) ReadUint8() (uint8, error) {
 		return 0, err
 	}
 	return v[0], nil
+}
+
+func (stream *InStream) String() string {
+	return fmt.Sprintf("[instream buffer size:%d]", stream.buffer.Len())
 }

@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-
 // Package inbitstream ...
 package inbitstream
 
@@ -105,4 +104,46 @@ func (s *InBitStream) ReadBits(count uint) (uint32, error) {
 		return v, nil
 	}
 	return s.readOnce(count)
+}
+
+// ReadSignedBits : Read signed bits from stream
+func (s *InBitStream) ReadSignedBits(count uint) (int32, error) {
+	sign, _ := s.ReadBits(1)
+	v, _ := s.ReadBits(count - 1)
+
+	signed := int32(v)
+
+	if sign != 0 {
+		signed = -signed
+	}
+
+	return signed, nil
+}
+
+// ReadUint32 : Read unsigned 32-bit from stream
+func (s *InBitStream) ReadUint32() (uint32, error) {
+	v, err := s.ReadBits(32)
+	return uint32(v), err
+}
+
+// ReadUint16 : Read unsigned 16-bit from stream
+func (s *InBitStream) ReadUint16() (uint16, error) {
+	v, err := s.ReadBits(16)
+	return uint16(v), err
+}
+
+// ReadInt16 : Read unsigned 16-bit from stream
+func (s *InBitStream) ReadInt16() (int16, error) {
+	v, err := s.ReadSignedBits(16)
+	return int16(v), err
+}
+
+// ReadUint8 : Read unsigned 8-bit from stream
+func (s *InBitStream) ReadUint8() (uint8, error) {
+	v, err := s.ReadBits(8)
+	return uint8(v), err
+}
+
+func (s *InBitStream) String() string {
+	return fmt.Sprintf("[inbitstream buf:%v]", s.octetReader)
 }

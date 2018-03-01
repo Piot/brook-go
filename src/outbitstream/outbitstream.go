@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-
 // Package outbitstream ...
 package outbitstream
 
@@ -66,7 +65,7 @@ func (s *OutBitStream) writeRest(v uint32, count uint, bitsToKeepFromLeft uint) 
 	s.ac |= ov
 }
 
-// WriteBits : Write bits from stream
+// WriteBits : Write bits to stream
 func (s *OutBitStream) WriteBits(v uint32, count uint) error {
 	if count > 32 {
 		return fmt.Errorf("Max 32 bits to write")
@@ -82,4 +81,33 @@ func (s *OutBitStream) WriteBits(v uint32, count uint) error {
 	}
 
 	return nil
+}
+
+// WriteSignedBits : Write signed bits to stream
+func (s *OutBitStream) WriteSignedBits(v int32, count uint) error {
+	sign := 0
+
+	if v < 0 {
+		sign = 1
+		v = -v
+	}
+
+	s.WriteBits(uint32(sign), 1)
+	s.WriteBits(uint32(v), count-1)
+	return nil
+}
+
+// WriteUint32 : Write bits to stream
+func (s *OutBitStream) WriteUint32(v uint32) error {
+	return s.WriteBits(v, 32)
+}
+
+// WriteUint16 : Write bits to stream
+func (s *OutBitStream) WriteUint16(v uint16) error {
+	return s.WriteBits(uint32(v), 16)
+}
+
+// WriteUint8 : Write bits from stream
+func (s *OutBitStream) WriteUint8(v uint8) error {
+	return s.WriteBits(uint32(v), 8)
 }
