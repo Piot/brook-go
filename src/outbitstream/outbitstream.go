@@ -55,6 +55,13 @@ func (s *OutBitStream) writeOctets() {
 	s.remainingBits = 32
 }
 
+// Close :
+func (s *OutBitStream) Close() {
+	if s.remainingBits != 32 {
+		s.writeOctets()
+	}
+}
+
 func (s *OutBitStream) writeRest(v uint32, count uint, bitsToKeepFromLeft uint) {
 	ov := v
 
