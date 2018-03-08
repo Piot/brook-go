@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 // Package outbitstream ...
 package outbitstream
 
@@ -107,6 +108,14 @@ func (s *OutBitStream) WriteSignedBits(v int32, count uint) error {
 // WriteUint32 : Write bits to stream
 func (s *OutBitStream) WriteUint32(v uint32) error {
 	return s.WriteBits(v, 32)
+}
+
+// WriteUint64 : Write bits to stream
+func (s *OutBitStream) WriteUint64(v uint64) error {
+	upper := uint32(v >> 32)
+	s.WriteBits(upper, 32)
+	lower := uint32(v & 0xffffffff)
+	return s.WriteBits(lower, 32)
 }
 
 // WriteUint16 : Write bits to stream

@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 // Package inbitstream ...
 package inbitstream
 
@@ -118,6 +119,18 @@ func (s *InBitStream) ReadSignedBits(count uint) (int32, error) {
 	}
 
 	return signed, nil
+}
+
+// ReadUint64 : Read unsigned 64-bit from stream
+func (s *InBitStream) ReadUint64() (uint64, error) {
+	upper, err := s.ReadBits(32)
+	if err != nil {
+		return 0, err
+	}
+	r := uint64(upper) << 32
+	lower, lowerErr := s.ReadBits(32)
+	r |= uint64(lower)
+	return r, lowerErr
 }
 
 // ReadUint32 : Read unsigned 32-bit from stream

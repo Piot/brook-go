@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 // Package outstream ...
 package outstream
 
@@ -67,6 +68,14 @@ func (s *OutStream) Feed(octets []byte) error {
 func (s *OutStream) WriteUint32(v uint32) error {
 	temp := make([]byte, 4)
 	binary.BigEndian.PutUint32(temp, v)
+	s.Feed(temp)
+	return nil
+}
+
+// WriteUint64 : Writes an unsigned 64-bit integer to stream
+func (s *OutStream) WriteUint64(v uint64) error {
+	temp := make([]byte, 8)
+	binary.BigEndian.PutUint64(temp, v)
 	s.Feed(temp)
 	return nil
 }

@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 // Package instream ...
 package instream
 
@@ -73,6 +74,16 @@ func (stream *InStream) Read(octetCount int) ([]byte, error) {
 // ReadOctets : Reads octets from the stream
 func (stream *InStream) ReadOctets(octetCount int) ([]byte, error) {
 	return stream.Read(octetCount)
+}
+
+// ReadUint64 reads an unsigned 64-bit integer from the stream
+func (stream *InStream) ReadUint64() (uint64, error) {
+	temp, err := stream.Read(8)
+	if err != nil {
+		return 0, err
+	}
+	v := binary.BigEndian.Uint64(temp)
+	return v, nil
 }
 
 // ReadUint32 : Reads an unsigned 32-bit integer from the stream
