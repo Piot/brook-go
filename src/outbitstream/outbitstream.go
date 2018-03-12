@@ -105,6 +105,11 @@ func (s *OutBitStream) WriteSignedBits(v int32, count uint) error {
 	return nil
 }
 
+// WriteInt32 : Write bits to stream
+func (s *OutBitStream) WriteInt32(v int32) error {
+	return s.WriteSignedBits(int32(v), 32)
+}
+
 // WriteUint32 : Write bits to stream
 func (s *OutBitStream) WriteUint32(v uint32) error {
 	return s.WriteBits(v, 32)
@@ -121,6 +126,11 @@ func (s *OutBitStream) WriteUint64(v uint64) error {
 // WriteUint16 : Write bits to stream
 func (s *OutBitStream) WriteUint16(v uint16) error {
 	return s.WriteBits(uint32(v), 16)
+}
+
+// WriteInt16 : Write bits to stream
+func (s *OutBitStream) WriteInt16(v int16) error {
+	return s.WriteSignedBits(int32(v), 16)
 }
 
 // WriteUint8 : Write bits from stream
