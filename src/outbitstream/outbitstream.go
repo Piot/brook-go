@@ -30,6 +30,7 @@ package outbitstream
 import (
 	"fmt"
 
+	"github.com/piot/brook-go/src/inbitstream"
 	"github.com/piot/brook-go/src/outstream"
 )
 
@@ -38,11 +39,12 @@ type OutBitStream struct {
 	octetWriter   *outstream.OutStream
 	remainingBits uint
 	ac            uint32
+	bitPosition   uint
 }
 
 // New : Creates an input bit stream
 func New(octetWriter *outstream.OutStream) *OutBitStream {
-	stream := OutBitStream{octetWriter: octetWriter, ac: 0, remainingBits: 32}
+	stream := OutBitStream{octetWriter: octetWriter, ac: 0, remainingBits: 32, bitPosition: 0}
 	return &stream
 }
 
@@ -56,11 +58,26 @@ func (s *OutBitStream) writeOctets() {
 	s.remainingBits = 32
 }
 
+// Tell :
+func (s *OutBitStream) Tell() uint {
+	return s.bitPosition
+}
+
 // Close :
 func (s *OutBitStream) Close() {
 	if s.remainingBits != 32 {
 		s.writeOctets()
 	}
+}
+
+func (s *OutBitStream) WriteBitsFromStream(in *inbitstream.InBitStream, bitCount uint) {
+	lastBitCount := uint(bitCount % 32)
+	for i := uint(0); i < bitCount/32; i++ {
+		data, _ := in.ReadBits(32)
+		s.WriteBits(data, 32)
+	}
+	data, _ := in.ReadBits(lastBitCount)
+	s.WriteBits(data, lastBitCount)
 }
 
 func (s *OutBitStream) writeRest(v uint32, count uint, bitsToKeepFromLeft uint) {
@@ -70,6 +87,7 @@ func (s *OutBitStream) writeRest(v uint32, count uint, bitsToKeepFromLeft uint) 
 	ov &= maskFromCount(bitsToKeepFromLeft)
 	ov <<= s.remainingBits - bitsToKeepFromLeft
 	s.remainingBits -= bitsToKeepFromLeft
+	s.bitPosition += count
 	s.ac |= ov
 }
 
