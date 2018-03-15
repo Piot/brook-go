@@ -37,7 +37,8 @@ import (
 
 // OutStream : Write to octet stream
 type OutStream struct {
-	buffer bytes.Buffer
+	buffer   bytes.Buffer
+	position int
 }
 
 // New : Creates an output stream
@@ -57,11 +58,16 @@ func (s *OutStream) Feed(octets []byte) error {
 		err := errors.New("couldn't write all octets")
 		return err
 	}
+	s.position += len(octets)
 	if false {
 		hexPayload := hex.Dump(s.buffer.Bytes())
 		fmt.Printf("Buffer is now:%s\n", hexPayload)
 	}
 	return nil
+}
+
+func (s *OutStream) Tell() int {
+	return s.position
 }
 
 // WriteUint32 : Writes an unsigned 32-bit integer to stream

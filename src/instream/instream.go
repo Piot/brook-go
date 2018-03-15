@@ -37,14 +37,20 @@ import (
 
 // InStream : Read octet stream
 type InStream struct {
-	buffer bytes.Buffer
+	buffer   bytes.Buffer
+	position int
 }
 
 // New : Creates an input stream
 func New(octets []byte) InStream {
 	buf := bytes.NewBuffer(octets)
-	stream := InStream{buffer: *buf}
+	stream := InStream{buffer: *buf, position: 0}
+
 	return stream
+}
+
+func (stream *InStream) Tell() int {
+	return stream.position
 }
 
 // IsEOF : Checks if the input stream is empty
@@ -64,6 +70,7 @@ func (stream *InStream) Read(octetCount int) ([]byte, error) {
 		err := errors.New("Couldn't read all octets")
 		return nil, err
 	}
+	stream.position += octetCount
 	if false {
 		hexPayload := hex.Dump(stream.buffer.Bytes())
 		fmt.Printf("Buffer is now:%s", hexPayload)
