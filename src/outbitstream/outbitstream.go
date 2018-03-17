@@ -66,18 +66,40 @@ func (s *OutBitStream) Tell() uint {
 // Close :
 func (s *OutBitStream) Close() {
 	if s.remainingBits != 32 {
-		s.writeOctets()
+		ac := s.ac
+		bitsWritten := 32 - s.remainingBits
+		octetCount := ((bitsWritten - 1) / 8) + 1
+		outOctets := make([]byte, octetCount)
+		for i := uint(0); i < octetCount; i++ {
+			out := byte((ac & 0xff000000) >> 24)
+			ac <<= 8
+			outOctets[i] = out
+		}
+		s.octetWriter.WriteOctets(outOctets)
 	}
 }
 
-func (s *OutBitStream) WriteBitsFromStream(in *inbitstream.InBitStream, bitCount uint) {
+func (s *OutBitStream) WriteBitsFromStream(in *inbitstream.InBitStream, bitCount uint) error {
 	lastBitCount := uint(bitCount % 32)
 	for i := uint(0); i < bitCount/32; i++ {
-		data, _ := in.ReadBits(32)
-		s.WriteBits(data, 32)
+		data, readErr := in.ReadBits(32)
+		if readErr != nil {
+			return readErr
+		}
+		writeErr := s.WriteBits(data, 32)
+		if writeErr != nil {
+			return writeErr
+		}
 	}
-	data, _ := in.ReadBits(lastBitCount)
-	s.WriteBits(data, lastBitCount)
+	data, lastReadErr := in.ReadBits(lastBitCount)
+	if lastReadErr != nil {
+		return lastReadErr
+	}
+	lastWriteErr := s.WriteBits(data, lastBitCount)
+	if lastWriteErr != nil {
+		return lastWriteErr
+	}
+	return nil
 }
 
 func (s *OutBitStream) writeRest(v uint32, count uint, bitsToKeepFromLeft uint) {

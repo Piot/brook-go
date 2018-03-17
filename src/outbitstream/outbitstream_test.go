@@ -64,3 +64,34 @@ func TestWriteMoreThanThirtyBits(t *testing.T) {
 	}
 
 }
+
+func checkOctetLength(t *testing.T, octetWriter *outstream.OutStream, expectedLength int) {
+	octets := octetWriter.Octets()
+	if len(octets) != expectedLength {
+		t.Errorf("Wrong length:%d expected %d", len(octets), expectedLength)
+	}
+
+}
+
+func TestOctetLength(t *testing.T) {
+	bitstream, octetWriter := setup()
+	checkOctetLength(t, octetWriter, 0)
+	firstErr := bitstream.WriteBits(0xcafe, 32)
+	if firstErr != nil {
+		t.Error(firstErr)
+	}
+
+	secondErr := bitstream.WriteBits(0x3, 2)
+	if secondErr != nil {
+		t.Error(secondErr)
+	}
+
+	bitstream.Close()
+
+	checkOctetLength(t, octetWriter, 5)
+
+	if octetWriter.Octets()[4] != 0xc0 {
+		t.Errorf("Didn't work")
+	}
+
+}

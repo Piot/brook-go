@@ -74,32 +74,32 @@ func (s *OutStream) Tell() int {
 func (s *OutStream) WriteUint32(v uint32) error {
 	temp := make([]byte, 4)
 	binary.BigEndian.PutUint32(temp, v)
-	s.Feed(temp)
-	return nil
+	err := s.Feed(temp)
+	return err
 }
 
 // WriteUint64 : Writes an unsigned 64-bit integer to stream
 func (s *OutStream) WriteUint64(v uint64) error {
 	temp := make([]byte, 8)
 	binary.BigEndian.PutUint64(temp, v)
-	s.Feed(temp)
-	return nil
+	err := s.Feed(temp)
+	return err
 }
 
 // WriteUint16 : Writes an unsigned 16-bit integer to stream
 func (s *OutStream) WriteUint16(v uint16) error {
 	temp := make([]byte, 2)
 	binary.BigEndian.PutUint16(temp, v)
-	s.Feed(temp)
-	return nil
+	err := s.Feed(temp)
+	return err
 }
 
 // WriteUint8 : Writes an octet to stream
 func (s *OutStream) WriteUint8(v uint8) error {
 	temp := make([]byte, 1)
 	temp[0] = v
-	s.Feed(temp)
-	return nil
+	err := s.Feed(temp)
+	return err
 }
 
 // WriteOctets : Writes octets to stream

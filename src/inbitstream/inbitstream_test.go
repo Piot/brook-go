@@ -36,7 +36,7 @@ func setup() *InBitStream {
 	octets := []byte{0xca, 0xfe, 0xde, 0xad, 0xc0, 0xde, 0xff, 0x00}
 	reader := instream.New(octets)
 
-	bitstream := New(&reader)
+	bitstream := New(&reader, 8*8)
 	return bitstream
 }
 

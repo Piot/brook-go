@@ -35,14 +35,16 @@ import (
 
 // InBitStream : Read bit stream
 type InBitStream struct {
-	octetReader   *instream.InStream
-	remainingBits uint
-	data          uint32
+	octetReader           *instream.InStream
+	remainingBits         uint
+	data                  uint32
+	remainingBitsInStream uint
+	position              uint
 }
 
 // New : Creates an input bit stream
-func New(octetReader *instream.InStream) *InBitStream {
-	stream := InBitStream{octetReader: octetReader, data: 0, remainingBits: 0}
+func New(octetReader *instream.InStream, bitCount uint) *InBitStream {
+	stream := InBitStream{octetReader: octetReader, data: 0, remainingBits: 0, remainingBitsInStream: bitCount, position: 0}
 	return &stream
 }
 
@@ -58,6 +60,8 @@ func (s *InBitStream) readOnce(bitsToRead uint) (uint32, error) {
 	if bitsToRead > s.remainingBits {
 		return 0, fmt.Errorf("Read passed end of stream")
 	}
+
+	s.remainingBitsInStream -= bitsToRead
 	mask := maskFromCount(bitsToRead)
 	shiftPos := uint(s.remainingBits - bitsToRead)
 	bits := (s.data >> shiftPos) & mask
@@ -87,6 +91,10 @@ func (s *InBitStream) fill() error {
 func (s *InBitStream) ReadBits(count uint) (uint32, error) {
 	if count > 32 {
 		return 0, fmt.Errorf("Max 32 bits to read")
+	}
+
+	if count > s.remainingBitsInStream {
+		return 0, fmt.Errorf("End of stream")
 	}
 
 	if count > s.remainingBits {
