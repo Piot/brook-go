@@ -29,6 +29,7 @@ package inbitstream
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/piot/brook-go/src/instream"
 )
@@ -70,20 +71,25 @@ func (s *InBitStream) readOnce(bitsToRead uint) (uint32, error) {
 }
 
 func (s *InBitStream) fill() error {
-	octetsToRead := uint(4)
-
+	maxOctetsToRead := uint(4)
 	newData := uint32(0)
-	for i := uint(0); i < octetsToRead; i++ {
-		newData <<= 8
+	octetsRead := 0
+	for i := uint(0); i < maxOctetsToRead; i++ {
 		octet, readOctetErr := s.octetReader.ReadUint8()
 		if readOctetErr != nil {
+			if readOctetErr == io.EOF {
+				break
+			}
 			return readOctetErr
 		}
-		newData |= uint32(octet)
+		octetsRead++
+		octetValue := uint32(octet)
+		newData <<= 8
+		newData |= octetValue
 	}
 
 	s.data = newData
-	s.remainingBits = octetsToRead * 8
+	s.remainingBits = uint(octetsRead * 8)
 	return nil
 }
 
@@ -108,7 +114,10 @@ func (s *InBitStream) ReadBits(count uint) (uint32, error) {
 			return 0, fillErr
 		}
 		v <<= secondCount
-		v2, _ := s.readOnce(secondCount)
+		v2, secondCountErr := s.readOnce(secondCount)
+		if secondCountErr != nil {
+			return 0, secondCountErr
+		}
 		v |= v2
 		return v, nil
 	}
@@ -117,8 +126,15 @@ func (s *InBitStream) ReadBits(count uint) (uint32, error) {
 
 // ReadSignedBits : Read signed bits from stream
 func (s *InBitStream) ReadSignedBits(count uint) (int32, error) {
-	sign, _ := s.ReadBits(1)
-	v, _ := s.ReadBits(count - 1)
+	sign, signErr := s.ReadBits(1)
+	if signErr != nil {
+		return 0, signErr
+	}
+
+	v, vErr := s.ReadBits(count - 1)
+	if vErr != nil {
+		return 0, vErr
+	}
 
 	signed := int32(v)
 

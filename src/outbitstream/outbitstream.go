@@ -109,7 +109,7 @@ func (s *OutBitStream) writeRest(v uint32, count uint, bitsToKeepFromLeft uint) 
 	ov &= maskFromCount(bitsToKeepFromLeft)
 	ov <<= s.remainingBits - bitsToKeepFromLeft
 	s.remainingBits -= bitsToKeepFromLeft
-	s.bitPosition += count
+	s.bitPosition += bitsToKeepFromLeft
 	s.ac |= ov
 }
 
@@ -133,15 +133,23 @@ func (s *OutBitStream) WriteBits(v uint32, count uint) error {
 
 // WriteSignedBits : Write signed bits to stream
 func (s *OutBitStream) WriteSignedBits(v int32, count uint) error {
-	sign := 0
-
+	sign := uint32(0)
+	var uv uint32
 	if v < 0 {
 		sign = 1
-		v = -v
+		uv = uint32(-v)
+	} else {
+		uv = uint32(v)
 	}
 
-	s.WriteBits(uint32(sign), 1)
-	s.WriteBits(uint32(v), count-1)
+	signWriteErr := s.WriteBits(uint32(sign), 1)
+	if signWriteErr != nil {
+		return signWriteErr
+	}
+	valueWriteErr := s.WriteBits(uv, count-1)
+	if valueWriteErr != nil {
+		return valueWriteErr
+	}
 	return nil
 }
 

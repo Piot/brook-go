@@ -32,12 +32,27 @@ import (
 	"github.com/piot/brook-go/src/instream"
 )
 
-func setup() *InBitStream {
-	octets := []byte{0xca, 0xfe, 0xde, 0xad, 0xc0, 0xde, 0xff, 0x00}
+func setupWithArray(octets []byte) *InBitStream {
 	reader := instream.New(octets)
-
 	bitstream := New(&reader, 8*8)
 	return bitstream
+}
+
+func setup() *InBitStream {
+	octets := []byte{0xca, 0xfe, 0xde, 0xad, 0xc0, 0xde, 0xff, 0x00}
+	return setupWithArray(octets)
+}
+
+func TestReadShortStream(t *testing.T) {
+	testOctets := []byte{0xca, 0xfe}
+	bitstream := setupWithArray(testOctets)
+	nibble, nibbleErr := bitstream.ReadBits(4)
+	if nibbleErr != nil {
+		t.Error(nibbleErr)
+	}
+	if nibble != 0x000c {
+		t.Errorf("Expected 0x0c received %02x", nibble)
+	}
 }
 
 func TestReadTenBits(t *testing.T) {
