@@ -32,13 +32,13 @@ import (
 	"github.com/piot/brook-go/src/instream"
 )
 
-func setupWithArray(octets []byte) *InBitStream {
+func setupWithArray(octets []byte) InBitStream {
 	reader := instream.New(octets)
 	bitstream := New(&reader, 8*8)
 	return bitstream
 }
 
-func setup() *InBitStream {
+func setup() InBitStream {
 	octets := []byte{0xca, 0xfe, 0xde, 0xad, 0xc0, 0xde, 0xff, 0x00}
 	return setupWithArray(octets)
 }

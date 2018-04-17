@@ -28,160 +28,32 @@ SOFTWARE.
 package outbitstream
 
 import (
-	"fmt"
-
 	"github.com/piot/brook-go/src/inbitstream"
-	"github.com/piot/brook-go/src/outstream"
 )
 
-// OutBitStream : Read bit stream
-type OutBitStream struct {
-	octetWriter   *outstream.OutStream
-	remainingBits uint
-	ac            uint32
-	bitPosition   uint
-}
+type OutBitStream interface {
+	Tell() uint
+	Close()
+	WriteBitsFromStream(in inbitstream.InBitStream, bitCount uint) error
+	// WriteBits : Write bits to stream
+	WriteBits(v uint32, count uint) error
 
-// New : Creates an input bit stream
-func New(octetWriter *outstream.OutStream) *OutBitStream {
-	stream := OutBitStream{octetWriter: octetWriter, ac: 0, remainingBits: 32, bitPosition: 0}
-	return &stream
-}
+	WriteRawBits(v uint32, count uint) error
+	// WriteSignedBits : Write signed bits to stream
+	WriteSignedBits(v int32, count uint) error
+	// WriteInt32 : Write bits to stream
+	WriteInt32(v int32) error
 
-func maskFromCount(count uint) uint32 {
-	return (1 << uint(count)) - 1
-}
+	// WriteUint32 : Write bits to stream
+	WriteUint32(v uint32) error
+	// WriteUint64 : Write bits to stream
+	WriteUint64(v uint64) error
+	// WriteUint16 : Write bits to stream
+	WriteUint16(v uint16) error
 
-func (s *OutBitStream) writeOctets() {
-	s.octetWriter.WriteUint32(s.ac)
-	s.ac = 0
-	s.remainingBits = 32
-}
+	// WriteInt16 : Write bits to stream
+	WriteInt16(v int16) error
 
-// Tell :
-func (s *OutBitStream) Tell() uint {
-	return s.bitPosition
-}
-
-// Close :
-func (s *OutBitStream) Close() {
-	if s.remainingBits != 32 {
-		ac := s.ac
-		bitsWritten := 32 - s.remainingBits
-		octetCount := ((bitsWritten - 1) / 8) + 1
-		outOctets := make([]byte, octetCount)
-		for i := uint(0); i < octetCount; i++ {
-			out := byte((ac & 0xff000000) >> 24)
-			ac <<= 8
-			outOctets[i] = out
-		}
-		s.octetWriter.WriteOctets(outOctets)
-	}
-}
-
-func (s *OutBitStream) WriteBitsFromStream(in *inbitstream.InBitStream, bitCount uint) error {
-	lastBitCount := uint(bitCount % 32)
-	for i := uint(0); i < bitCount/32; i++ {
-		data, readErr := in.ReadBits(32)
-		if readErr != nil {
-			return readErr
-		}
-		writeErr := s.WriteBits(data, 32)
-		if writeErr != nil {
-			return writeErr
-		}
-	}
-	data, lastReadErr := in.ReadBits(lastBitCount)
-	if lastReadErr != nil {
-		return lastReadErr
-	}
-	lastWriteErr := s.WriteBits(data, lastBitCount)
-	if lastWriteErr != nil {
-		return lastWriteErr
-	}
-	return nil
-}
-
-func (s *OutBitStream) writeRest(v uint32, count uint, bitsToKeepFromLeft uint) {
-	ov := v
-
-	ov >>= uint(count - bitsToKeepFromLeft)
-	ov &= maskFromCount(bitsToKeepFromLeft)
-	ov <<= s.remainingBits - bitsToKeepFromLeft
-	s.remainingBits -= bitsToKeepFromLeft
-	s.bitPosition += bitsToKeepFromLeft
-	s.ac |= ov
-}
-
-// WriteBits : Write bits to stream
-func (s *OutBitStream) WriteBits(v uint32, count uint) error {
-	if count > 32 {
-		return fmt.Errorf("Max 32 bits to write")
-	}
-
-	if count > s.remainingBits {
-		firstWriteCount := s.remainingBits
-		s.writeRest(v, count, firstWriteCount)
-		s.writeOctets()
-		s.writeRest(v, count-firstWriteCount, count-firstWriteCount)
-	} else {
-		s.writeRest(v, count, count)
-	}
-
-	return nil
-}
-
-// WriteSignedBits : Write signed bits to stream
-func (s *OutBitStream) WriteSignedBits(v int32, count uint) error {
-	sign := uint32(0)
-	var uv uint32
-	if v < 0 {
-		sign = 1
-		uv = uint32(-v)
-	} else {
-		uv = uint32(v)
-	}
-
-	signWriteErr := s.WriteBits(uint32(sign), 1)
-	if signWriteErr != nil {
-		return signWriteErr
-	}
-	valueWriteErr := s.WriteBits(uv, count-1)
-	if valueWriteErr != nil {
-		return valueWriteErr
-	}
-	return nil
-}
-
-// WriteInt32 : Write bits to stream
-func (s *OutBitStream) WriteInt32(v int32) error {
-	return s.WriteSignedBits(int32(v), 32)
-}
-
-// WriteUint32 : Write bits to stream
-func (s *OutBitStream) WriteUint32(v uint32) error {
-	return s.WriteBits(v, 32)
-}
-
-// WriteUint64 : Write bits to stream
-func (s *OutBitStream) WriteUint64(v uint64) error {
-	upper := uint32(v >> 32)
-	s.WriteBits(upper, 32)
-	lower := uint32(v & 0xffffffff)
-	return s.WriteBits(lower, 32)
-}
-
-// WriteUint16 : Write bits to stream
-func (s *OutBitStream) WriteUint16(v uint16) error {
-	return s.WriteBits(uint32(v), 16)
-}
-
-// WriteInt16 : Write bits to stream
-func (s *OutBitStream) WriteInt16(v int16) error {
-	return s.WriteSignedBits(int32(v), 16)
-}
-
-// WriteUint8 : Write bits from stream
-func (s *OutBitStream) WriteUint8(v uint8) error {
-	return s.WriteBits(uint32(v), 8)
+	// WriteUint8 : Write bits from stream
+	WriteUint8(v uint8) error
 }
