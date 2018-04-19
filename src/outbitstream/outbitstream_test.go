@@ -108,7 +108,7 @@ func TestWriteMoreThanThirtyBitsDebug(t *testing.T) {
 	}
 
 	readFromBuffer := binary.BigEndian.Uint32(octets)
-	const expected uint32 = 0x6532BFB5
+	const expected uint32 = 0x72995FDA
 	if readFromBuffer != expected {
 		t.Errorf("Expected %d got %v %08X", expected, printBits((readFromBuffer)), readFromBuffer)
 	}

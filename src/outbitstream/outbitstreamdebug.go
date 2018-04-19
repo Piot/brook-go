@@ -51,7 +51,7 @@ func (o *OutBitStreamDebug) WriteBitsFromStream(in inbitstream.InBitStream, bitC
 }
 
 func (o *OutBitStreamDebug) WriteBits(v uint32, count uint) error {
-	o.writeType(6, count)
+	o.writeType(7, count)
 	return o.stream.WriteBits(v, count)
 }
 
@@ -60,7 +60,7 @@ func (o *OutBitStreamDebug) WriteRawBits(v uint32, count uint) error {
 }
 
 func (o *OutBitStreamDebug) WriteSignedBits(v int32, count uint) error {
-	o.writeType(5, count)
+	o.writeType(6, count)
 	return o.stream.WriteSignedBits(v, count)
 }
 
@@ -95,6 +95,7 @@ func (o *OutBitStreamDebug) WriteUint8(v uint8) error {
 }
 
 func (o *OutBitStreamDebug) writeType(t int, bitCount uint) {
+	// fmt.Printf("Writing type %v %v\n", t, bitCount)
 	o.stream.WriteBits(uint32(t), 4)
 	o.stream.WriteBits(uint32(bitCount), 7)
 }

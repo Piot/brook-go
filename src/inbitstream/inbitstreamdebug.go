@@ -54,7 +54,7 @@ func (i *InBitStreamDebug) checkType(expectedType int, expectedBitCount uint) er
 		return fmt.Errorf("Expected %v count but received %v bitcount (type:%v)", expectedBitCount, bitCount, expectedType)
 	}
 
-	fmt.Printf("Verified %v %v\n", expectedType, expectedBitCount)
+	// fmt.Printf("Verified %v %v\n", expectedType, expectedBitCount)
 	return nil
 }
 
@@ -67,7 +67,7 @@ func (i *InBitStreamDebug) ReadRawBits(count uint) (uint32, error) {
 }
 
 func (i *InBitStreamDebug) ReadBits(count uint) (uint32, error) {
-	checkErr := i.checkType(6, count)
+	checkErr := i.checkType(7, count)
 	if checkErr != nil {
 		return 0, checkErr
 	}
@@ -76,7 +76,7 @@ func (i *InBitStreamDebug) ReadBits(count uint) (uint32, error) {
 
 // ReadSignedBits : Read signed bits from stream
 func (i *InBitStreamDebug) ReadSignedBits(count uint) (int32, error) {
-	checkErr := i.checkType(5, count)
+	checkErr := i.checkType(6, count)
 	if checkErr != nil {
 		return 0, checkErr
 	}
