@@ -33,6 +33,27 @@ type InBitStreamDebug struct {
 	stream InBitStream
 }
 
+func debugTypeValueToString(expectedType int) string {
+	switch expectedType {
+	case 1:
+		return "uint16"
+	case 2:
+		return "int16"
+	case 3:
+		return "uint32"
+	case 4:
+		return "uint64"
+	case 5:
+		return "uint8"
+	case 6:
+		return "signed"
+	case 7:
+		return "unsigned"
+	}
+
+	return "unknown"
+}
+
 func NewDebugStream(stream InBitStream) *InBitStreamDebug {
 	return &InBitStreamDebug{stream: stream}
 }
@@ -43,7 +64,7 @@ func (i *InBitStreamDebug) checkType(expectedType int, expectedBitCount uint) er
 		return tErr
 	}
 	if int(t) != expectedType {
-		return fmt.Errorf("Expected %v but received %v", expectedType, t)
+		return fmt.Errorf("Expected %v but received %v (%v vs %v)", debugTypeValueToString(expectedType), debugTypeValueToString(int(t)), expectedType, t)
 	}
 
 	bitCount, bitCountErr := i.internalRead(7)
@@ -51,7 +72,7 @@ func (i *InBitStreamDebug) checkType(expectedType int, expectedBitCount uint) er
 		return bitCountErr
 	}
 	if uint(bitCount) != expectedBitCount {
-		return fmt.Errorf("Expected %v count but received %v bitcount (type:%v)", expectedBitCount, bitCount, expectedType)
+		return fmt.Errorf("Expected %v count but received %v bitcount (type:%v %v)", expectedBitCount, bitCount, debugTypeValueToString(expectedType), expectedType)
 	}
 
 	// fmt.Printf("Verified %v %v\n", expectedType, expectedBitCount)
