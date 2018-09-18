@@ -5,12 +5,11 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
-func stripWhitespace(str string) string {
+func stripEverythingExceptZeroAndOne(str string) string {
 	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
+		if r != '0' && r != '1' {
 			return -1
 		}
 		return r
@@ -18,7 +17,7 @@ func stripWhitespace(str string) string {
 }
 
 func FromString(bitString string) []byte {
-	bitString = stripWhitespace(bitString)
+	bitString = stripEverythingExceptZeroAndOne(bitString)
 	fmt.Println(bitString)
 	expression, _ := regexp.Compile("[0|1]{8}")
 	matches := expression.FindAllString(bitString, -1)
