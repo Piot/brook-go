@@ -34,7 +34,7 @@ import (
 
 func setupWithArray(octets []byte) InBitStream {
 	reader := instream.New(octets)
-	bitstream := New(&reader, 8*8)
+	bitstream := New(reader, 8*8)
 	return bitstream
 }
 
