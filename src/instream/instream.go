@@ -42,9 +42,9 @@ type InStream struct {
 }
 
 // New : Creates an input stream
-func New(octets []byte) InStream {
+func New(octets []byte) *InStream {
 	buf := bytes.NewBuffer(octets)
-	stream := InStream{buffer: *buf, position: 0}
+	stream := &InStream{buffer: *buf, position: 0}
 
 	return stream
 }
