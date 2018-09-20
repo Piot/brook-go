@@ -41,6 +41,7 @@ type InBitStreamImpl struct {
 	data                  uint32
 	remainingBitsInStream uint
 	position              uint
+	tell                  uint
 }
 
 // New : Creates an input bit stream
@@ -66,8 +67,13 @@ func (s *InBitStreamImpl) readOnce(bitsToRead uint) (uint32, error) {
 	mask := maskFromCount(bitsToRead)
 	shiftPos := uint(s.remainingBits - bitsToRead)
 	bits := (s.data >> shiftPos) & mask
+	s.tell += bitsToRead
 	s.remainingBits -= bitsToRead
 	return bits, nil
+}
+
+func (s *InBitStreamImpl) DebugTell() uint {
+	return s.tell
 }
 
 func (s *InBitStreamImpl) fill() error {
