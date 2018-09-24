@@ -37,16 +37,20 @@ import (
 
 // InStream : Read octet stream
 type InStream struct {
-	buffer   bytes.Buffer
+	buffer   *bytes.Buffer
 	position int
 }
 
 // New : Creates an input stream
 func New(octets []byte) *InStream {
 	buf := bytes.NewBuffer(octets)
-	stream := &InStream{buffer: *buf, position: 0}
+	stream := &InStream{buffer: buf, position: 0}
 
 	return stream
+}
+
+func (stream *InStream) DebugGetBuffer() *bytes.Buffer {
+	return stream.buffer
 }
 
 func (stream *InStream) Tell() int {
