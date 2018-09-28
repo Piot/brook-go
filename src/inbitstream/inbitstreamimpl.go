@@ -50,6 +50,10 @@ func New(octetReader *instream.InStream, bitCount uint) *InBitStreamImpl {
 	return &stream
 }
 
+func (s *InBitStreamImpl) RemainingBitCount() uint {
+	return s.remainingBitsInStream
+}
+
 func maskFromCount(count uint) uint32 {
 	return (1 << uint(count)) - 1
 }

@@ -58,6 +58,10 @@ func NewDebugStream(stream InBitStream) *InBitStreamDebug {
 	return &InBitStreamDebug{stream: stream}
 }
 
+func (i *InBitStreamDebug) RemainingBitCount() uint {
+	return i.stream.RemainingBitCount()
+}
+
 func (i *InBitStreamDebug) checkType(expectedType int, expectedBitCount uint) error {
 	t, tErr := i.internalRead(4)
 	if tErr != nil {
