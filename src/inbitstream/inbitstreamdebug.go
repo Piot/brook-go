@@ -58,8 +58,12 @@ func NewDebugStream(stream InBitStream) *InBitStreamDebug {
 	return &InBitStreamDebug{stream: stream}
 }
 
-func (i *InBitStreamDebug) DebugTell() uint {
-	return i.stream.DebugTell()
+func (i *InBitStreamDebug) Tell() uint {
+	tryInfo, tryInfoWorked := i.stream.(InBitStreamInfo)
+	if !tryInfoWorked {
+		return 0
+	}
+	return tryInfo.Tell()
 }
 
 func (i *InBitStreamDebug) IsEOF() bool {

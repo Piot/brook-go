@@ -64,7 +64,7 @@ func (s *InBitStreamImpl) readOnce(bitsToRead uint) (uint32, error) {
 	}
 
 	if bitsToRead > s.remainingBits {
-		return 0, fmt.Errorf("Read passed end of stream")
+		return 0, &EOFError{Count: bitsToRead, Tell: s.tell}
 	}
 
 	s.remainingBitsInStream -= bitsToRead
@@ -76,7 +76,7 @@ func (s *InBitStreamImpl) readOnce(bitsToRead uint) (uint32, error) {
 	return bits, nil
 }
 
-func (s *InBitStreamImpl) DebugTell() uint {
+func (s *InBitStreamImpl) Tell() uint {
 	return s.tell
 }
 
@@ -114,7 +114,7 @@ func (s *InBitStreamImpl) ReadBits(count uint) (uint32, error) {
 	}
 
 	if count > s.remainingBitsInStream {
-		return 0, fmt.Errorf("End of stream")
+		return 0, &EOFError{Count: count, Tell: s.tell}
 	}
 
 	if count > s.remainingBits {

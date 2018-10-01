@@ -27,21 +27,6 @@ SOFTWARE.
 // Package inbitstream ...
 package inbitstream
 
-type InBitStream interface {
-	ReadBits(count uint) (uint32, error)
-	ReadRawBits(count uint) (uint32, error)
-	// ReadSignedBits : Read signed bits from stream
-	ReadSignedBits(count uint) (int32, error)
-	// ReadUint64 : Read unsigned 64-bit from stream
-	ReadUint64() (uint64, error)
-	// ReadUint32 : Read unsigned 32-bit from stream
-	ReadUint32() (uint32, error)
-	// ReadUint16 : Read unsigned 16-bit from stream
-	ReadUint16() (uint16, error)
-	// ReadInt16 : Read unsigned 16-bit from stream
-	ReadInt16() (int16, error)
-	// ReadUint8 : Read unsigned 8-bit from stream
-	ReadUint8() (uint8, error)
-
-	IsEOF() bool
+type InBitStreamInfo interface {
+	Tell() uint
 }
