@@ -29,43 +29,12 @@ package outbitstream
 
 import (
 	"github.com/piot/brook-go/src/inbitstream"
+	"github.com/piot/brook-go/src/instream"
 )
 
-type OutBitStream interface {
+func CopyFromOctets(targetStream OutBitStream, octets []byte, bitCountToCopy uint) error {
+	octetReader := instream.New(octets)
+	bitstreamToReadFrom := inbitstream.New(octetReader, bitCountToCopy)
 
-	// Get the bit position in the stream
-	Tell() uint
-
-	// Close flushes the latest changes and closes the stream
-	Close()
-
-	// WriteBitsFromStream copy bits from another stream
-	WriteBitsFromStream(in inbitstream.InBitStream, bitCount uint) error
-
-	// WriteBits : Write bits to stream
-	WriteBits(v uint32, count uint) error
-
-	// WriteRawBits only for internal use
-	WriteRawBits(v uint32, count uint) error
-
-	// WriteSignedBits : Write signed bits to stream
-	WriteSignedBits(v int32, count uint) error
-
-	// WriteUint64 : Write bits to stream
-	WriteUint64(v uint64) error
-
-	// WriteInt32 : Write bits to stream
-	WriteInt32(v int32) error
-
-	// WriteUint32 : Write bits to stream
-	WriteUint32(v uint32) error
-
-	// WriteUint16 : Write bits to stream
-	WriteUint16(v uint16) error
-
-	// WriteInt16 : Write bits to stream
-	WriteInt16(v int16) error
-
-	// WriteUint8 : Write bits from stream
-	WriteUint8(v uint8) error
+	return targetStream.WriteBitsFromStream(bitstreamToReadFrom, bitCountToCopy)
 }
