@@ -50,6 +50,14 @@ func New(octetReader *instream.InStream, bitCount uint) *InBitStreamImpl {
 	return &stream
 }
 
+func NewWithOption(octetReader *instream.InStream, bitCount uint, useDebugStream bool) InBitStream {
+	s := New(octetReader, bitCount)
+	if useDebugStream {
+		return NewDebugStream(s)
+	}
+	return s
+}
+
 func (s *InBitStreamImpl) IsEOF() bool {
 	return s.remainingBitsInStream == 0
 }
