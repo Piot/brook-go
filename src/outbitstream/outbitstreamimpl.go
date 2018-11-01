@@ -48,6 +48,14 @@ func New(octetWriter *outstream.OutStream) *OutBitStreamImpl {
 	return &stream
 }
 
+func NewWithOption(octetWriter *outstream.OutStream, useDebug bool) OutBitStream {
+	impl := New(octetWriter)
+	if useDebug {
+		return NewDebugStream(impl)
+	}
+	return impl
+}
+
 func maskFromCount(count uint) uint32 {
 	return (1 << uint(count)) - 1
 }
