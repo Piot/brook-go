@@ -24,25 +24,10 @@ SOFTWARE.
 
 */
 
-// Package outbitstream ...
-package outbitstream
+// Package inbitstream ...
+package inbitstream
 
-import (
-	"github.com/piot/brook-go/src/inbitstream"
-	"github.com/piot/brook-go/src/instream"
-)
-
-func CopyFromOctets(targetStream OutBitStream, octets []byte, bitCountToCopy uint) error {
-	octetReader := instream.New(octets)
-	bitstreamToReadFrom := inbitstream.New(octetReader, bitCountToCopy)
-
-	return targetStream.WriteBitsFromStream(bitstreamToReadFrom, bitCountToCopy)
-}
-
-func WriteBool(targetStream OutBitStream, v bool) error {
-	writeValue := uint32(0)
-	if v {
-		writeValue = uint32(1)
-	}
-	return targetStream.WriteBits(writeValue, 1)
+func ReadBool(sourceStream InBitStream, v bool) (bool, error) {
+	readValue, err := sourceStream.ReadBits(1)
+	return readValue != 0, err
 }
