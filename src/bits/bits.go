@@ -27,7 +27,6 @@ SOFTWARE.
 package bits
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -44,7 +43,6 @@ func stripEverythingExceptZeroAndOne(str string) string {
 func FromString(bitString string) ([]byte, uint) {
 	bitString = stripEverythingExceptZeroAndOne(bitString)
 	bitCount := len(bitString)
-	fmt.Printf("bitCount:%v\n", bitCount)
 	remaining := bitCount % 8
 	if remaining != 0 {
 		bitString += strings.Repeat("0", 8-remaining)

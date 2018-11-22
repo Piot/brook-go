@@ -31,9 +31,12 @@ import (
 )
 
 func TestBitString(t *testing.T) {
-	input := "1111    0100 01110101 01111000 10101000"
-	octets := FromString(input)
-	if len(octets) != 4 {
+	input := "1111    0100 01110101 01111000 101010001"
+	octets, bitLength := FromString(input)
+	if bitLength != 33 {
+		t.Errorf("Unexpected bit length:%v", bitLength)
+	}
+	if len(octets) != 5 {
 		t.Errorf("Unexpected length")
 	}
 	if octets[0] != 0xf4 {
