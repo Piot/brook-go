@@ -27,7 +27,7 @@ SOFTWARE.
 // Package inbitstream ...
 package inbitstream
 
-func ReadBool(sourceStream InBitStream, v bool) (bool, error) {
+func ReadBool(sourceStream InBitStream) (bool, error) {
 	readValue, err := sourceStream.ReadBits(1)
 	return readValue != 0, err
 }
