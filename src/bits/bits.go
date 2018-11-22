@@ -28,7 +28,6 @@ package bits
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -42,16 +41,40 @@ func stripEverythingExceptZeroAndOne(str string) string {
 	}, str)
 }
 
-func FromString(bitString string) []byte {
+func FromString(bitString string) ([]byte, uint) {
 	bitString = stripEverythingExceptZeroAndOne(bitString)
-	fmt.Println(bitString)
-	expression, _ := regexp.Compile("[0|1]{8}")
-	matches := expression.FindAllString(bitString, -1)
-	b := make([]byte, len(matches))
-	for index, octetString := range matches {
-		octetIntValue, _ := strconv.ParseUint(octetString, 2, 8)
-		b[index] = byte(octetIntValue)
+	bitCount := len(bitString)
+	fmt.Printf("bitCount:%v\n", bitCount)
+	remaining := bitCount % 8
+	if remaining != 0 {
+		bitString += strings.Repeat("0", 8-remaining)
 	}
 
-	return b
+	octetCount := len(bitString) / 8
+	b := make([]byte, octetCount)
+	for i := 0; i < octetCount; i++ {
+		octetString := bitString[i*8 : i*8+8]
+		octetIntValue, _ := strconv.ParseUint(octetString, 2, 8)
+		b[i] = byte(octetIntValue)
+	}
+
+	return b, uint(bitCount)
+}
+
+func ToString(octets []byte) string {
+	s := ""
+	for i := 0; i < len(octets); i++ {
+		o := octets[i]
+		for j := 0; j < 8; j++ {
+			testMask := uint(1 << uint(7-j))
+			if uint(o)&testMask != 0 {
+				s += "1"
+			} else {
+				s += "0"
+			}
+
+		}
+	}
+
+	return s
 }
