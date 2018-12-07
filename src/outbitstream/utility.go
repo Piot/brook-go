@@ -30,6 +30,7 @@ package outbitstream
 import (
 	"github.com/piot/brook-go/src/inbitstream"
 	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
 func CopyFromOctets(targetStream OutBitStream, octets []byte, bitCountToCopy uint) error {
@@ -45,4 +46,10 @@ func WriteBool(targetStream OutBitStream, v bool) error {
 		writeValue = uint32(1)
 	}
 	return targetStream.WriteBits(writeValue, 1)
+}
+
+func NewTemporaryBitStream() (OutBitStream, *outstream.OutStream) {
+	octetStream := outstream.New()
+	bitStream := New(octetStream)
+	return bitStream, octetStream
 }
