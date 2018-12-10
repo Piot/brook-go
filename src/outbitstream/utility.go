@@ -53,3 +53,11 @@ func NewTemporaryBitStream() (OutBitStream, *outstream.OutStream) {
 	bitStream := New(octetStream)
 	return bitStream, octetStream
 }
+
+func NewTemporaryDebugBitStream() (OutBitStream, *outstream.OutStream) {
+	octetStream := outstream.New()
+	rawBitStream := New(octetStream)
+	bitStream := NewDebugStream(rawBitStream)
+
+	return bitStream, octetStream
+}
