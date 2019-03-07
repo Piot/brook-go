@@ -87,7 +87,6 @@ func (i *InBitStreamDebug) checkType(expectedType int, expectedBitCount uint) er
 		return fmt.Errorf("Expected %v count but received %v bitcount (type:%v %v)", expectedBitCount, bitCount, debugTypeValueToString(expectedType), expectedType)
 	}
 
-	// fmt.Printf("Verified %v %v\n", expectedType, expectedBitCount)
 	return nil
 }
 

@@ -30,7 +30,6 @@ package outstream
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 )
@@ -59,10 +58,6 @@ func (s *OutStream) Feed(octets []byte) error {
 		return err
 	}
 	s.position += len(octets)
-	if false {
-		hexPayload := hex.Dump(s.buffer.Bytes())
-		fmt.Printf("Buffer is now:%s\n", hexPayload)
-	}
 	return nil
 }
 

@@ -30,7 +30,6 @@ package instream
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 )
@@ -75,10 +74,6 @@ func (stream *InStream) Read(octetCount int) ([]byte, error) {
 		return nil, err
 	}
 	stream.position += octetCount
-	if false {
-		hexPayload := hex.Dump(stream.buffer.Bytes())
-		fmt.Printf("Buffer is now:%s", hexPayload)
-	}
 	return tempBuffer, nil
 }
 

@@ -95,7 +95,6 @@ func (o *OutBitStreamDebug) WriteUint8(v uint8) error {
 }
 
 func (o *OutBitStreamDebug) writeType(t int, bitCount uint) {
-	// fmt.Printf("Writing type %v %v\n", t, bitCount)
 	o.stream.WriteBits(uint32(t), 4)
 	o.stream.WriteBits(uint32(bitCount), 7)
 }
