@@ -45,6 +45,9 @@ type OutBitStream interface {
 	// Close flushes the latest changes and closes the stream
 	Octets() []byte
 
+	// Copy octets
+	CopyOctets(target []byte) uint
+
 	// WriteBitsFromStream copy bits from another stream
 	WriteBitsFromStream(in inbitstream.InBitStream, bitCount uint) error
 

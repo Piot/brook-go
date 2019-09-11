@@ -106,3 +106,7 @@ func (o *OutBitStreamDebug) writeType(t int, bitCount uint) {
 func (o *OutBitStreamDebug) Octets() []byte {
 	return o.stream.Octets()
 }
+
+func (o *OutBitStreamDebug) CopyOctets(target []byte) uint {
+	return o.stream.CopyOctets(target)
+}

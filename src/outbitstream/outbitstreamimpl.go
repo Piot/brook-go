@@ -72,7 +72,7 @@ func (s *OutBitStreamImpl) Tell() uint {
 	return s.bitPosition
 }
 
-// Seek :
+// Rewind :
 func (s *OutBitStreamImpl) Rewind(position uint) error {
 	s.writeAccumulatorToArray()
 	s.bitPosition = position
@@ -218,4 +218,11 @@ func (s *OutBitStreamImpl) Octets() []byte {
 	s.writeAccumulatorToArray()
 	octetCountWrittenTo := (s.bitPosition + 7) / 8
 	return s.octetArray[0:octetCountWrittenTo]
+}
+
+func (s *OutBitStreamImpl) CopyOctets(target []byte) uint {
+	s.writeAccumulatorToArray()
+	octetCountWrittenTo := (s.bitPosition + 7) / 8
+	copy(target, s.octetArray[0:octetCountWrittenTo])
+	return octetCountWrittenTo
 }
