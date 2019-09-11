@@ -28,28 +28,32 @@ SOFTWARE.
 package outbitstream
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/piot/brook-go/src/inbitstream"
-	"github.com/piot/brook-go/src/outstream"
 )
 
 // OutBitStreamImpl : Read bit stream
 type OutBitStreamImpl struct {
-	octetWriter   *outstream.OutStream
-	remainingBits uint
-	ac            uint32
-	bitPosition   uint
+	bitsInAccumulator uint
+	ac                uint32
+	bitPosition       uint
+	octetPosition     uint
+	octetArray        []byte
 }
 
 // New : Creates an input bit stream
-func New(octetWriter *outstream.OutStream) *OutBitStreamImpl {
-	stream := OutBitStreamImpl{octetWriter: octetWriter, ac: 0, remainingBits: 32, bitPosition: 0}
+func New(octetCount int) *OutBitStreamImpl {
+	if (octetCount % 4) != 0 {
+		octetCount += 4 - octetCount%4
+	}
+	stream := OutBitStreamImpl{octetArray: make([]byte, octetCount)}
 	return &stream
 }
 
-func NewWithOption(octetWriter *outstream.OutStream, useDebug bool) OutBitStream {
-	impl := New(octetWriter)
+func NewWithOption(octetCount int, useDebug bool) OutBitStream {
+	impl := New(octetCount)
 	if useDebug {
 		return NewDebugStream(impl)
 	}
@@ -60,10 +64,10 @@ func maskFromCount(count uint) uint32 {
 	return (1 << uint(count)) - 1
 }
 
-func (s *OutBitStreamImpl) writeOctets() {
-	s.octetWriter.WriteUint32(s.ac)
-	s.ac = 0
-	s.remainingBits = 32
+func (s *OutBitStreamImpl) writeAccumulatorToArray() {
+	unusedBitCount := 32 - s.bitsInAccumulator
+	dwordToWrite := s.ac << unusedBitCount
+	binary.BigEndian.PutUint32(s.octetArray[s.octetPosition:s.octetPosition+4], dwordToWrite)
 }
 
 // Tell :
@@ -71,19 +75,27 @@ func (s *OutBitStreamImpl) Tell() uint {
 	return s.bitPosition
 }
 
+// Rewind :
+func (s *OutBitStreamImpl) Rewind(position uint) error {
+	s.writeAccumulatorToArray()
+	s.bitPosition = position
+	s.octetPosition = position / 32
+	if s.octetPosition >= uint(len(s.octetArray)) {
+		return fmt.Errorf("seeked too far %v vs %v", position, len(s.octetArray)*32)
+	}
+	a := binary.BigEndian.Uint32(s.octetArray[s.octetPosition : s.octetPosition+4])
+	bitCountToUse := position % 32
+	bitCountToFlush := 32 - bitCountToUse
+	a >>= bitCountToFlush
+	s.bitsInAccumulator = bitCountToUse
+	s.ac = a
+	return nil
+}
+
 // Close :
 func (s *OutBitStreamImpl) Close() {
-	if s.remainingBits != 32 {
-		ac := s.ac
-		bitsWritten := 32 - s.remainingBits
-		octetCount := ((bitsWritten - 1) / 8) + 1
-		outOctets := make([]byte, octetCount)
-		for i := uint(0); i < octetCount; i++ {
-			out := byte((ac & 0xff000000) >> 24)
-			ac <<= 8
-			outOctets[i] = out
-		}
-		s.octetWriter.WriteOctets(outOctets)
+	if s.bitsInAccumulator != 0 {
+		s.writeAccumulatorToArray()
 	}
 }
 
@@ -110,15 +122,16 @@ func (s *OutBitStreamImpl) WriteBitsFromStream(in inbitstream.InBitStream, bitCo
 	return nil
 }
 
-func (s *OutBitStreamImpl) writeRest(v uint32, count uint, bitsToKeepFromLeft uint) {
+func (s *OutBitStreamImpl) addBitsToAccumulator(v uint32, count uint) {
 	ov := v
-
-	ov >>= uint(count - bitsToKeepFromLeft)
-	ov &= maskFromCount(bitsToKeepFromLeft)
-	ov <<= s.remainingBits - bitsToKeepFromLeft
-	s.remainingBits -= bitsToKeepFromLeft
-	s.bitPosition += bitsToKeepFromLeft
+	ov &= maskFromCount(count)
+	s.ac <<= count
 	s.ac |= ov
+	s.bitsInAccumulator += count
+	s.bitPosition += count
+	if s.bitsInAccumulator > 32 {
+		panic("wrong logic in bitstream")
+	}
 }
 
 // WriteRawBits : Write bits to stream
@@ -132,13 +145,18 @@ func (s *OutBitStreamImpl) WriteBits(v uint32, count uint) error {
 		return fmt.Errorf("Max 32 bits to write")
 	}
 
-	if count > s.remainingBits {
-		firstWriteCount := s.remainingBits
-		s.writeRest(v, count, firstWriteCount)
-		s.writeOctets()
-		s.writeRest(v, count-firstWriteCount, count-firstWriteCount)
+	bitCountLeftInAc := 32 - s.bitsInAccumulator
+	if count > bitCountLeftInAc {
+		shiftValue := count - bitCountLeftInAc
+		ov := v >> shiftValue
+		s.addBitsToAccumulator(ov, bitCountLeftInAc)
+		s.writeAccumulatorToArray()
+		s.octetPosition += 4
+		s.bitsInAccumulator = 0
+		s.ac = 0
+		s.addBitsToAccumulator(v, count-bitCountLeftInAc)
 	} else {
-		s.writeRest(v, count, count)
+		s.addBitsToAccumulator(v, count)
 	}
 
 	return nil
@@ -197,4 +215,17 @@ func (s *OutBitStreamImpl) WriteInt16(v int16) error {
 // WriteUint8 : Write bits from stream
 func (s *OutBitStreamImpl) WriteUint8(v uint8) error {
 	return s.WriteBits(uint32(v), 8)
+}
+
+func (s *OutBitStreamImpl) Octets() []byte {
+	s.writeAccumulatorToArray()
+	octetCountWrittenTo := (s.bitPosition + 7) / 8
+	return s.octetArray[0:octetCountWrittenTo]
+}
+
+func (s *OutBitStreamImpl) CopyOctets(target []byte) uint {
+	s.writeAccumulatorToArray()
+	octetCountWrittenTo := (s.bitPosition + 7) / 8
+	copy(target, s.octetArray[0:octetCountWrittenTo])
+	return octetCountWrittenTo
 }

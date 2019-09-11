@@ -64,14 +64,17 @@ func ToString(octets []byte) string {
 	for i := 0; i < len(octets); i++ {
 		o := octets[i]
 		for j := 0; j < 8; j++ {
+			if j == 4 {
+				s += "_"
+			}
 			testMask := uint(1 << uint(7-j))
 			if uint(o)&testMask != 0 {
 				s += "1"
 			} else {
 				s += "0"
 			}
-
 		}
+		s += " "
 	}
 
 	return s
