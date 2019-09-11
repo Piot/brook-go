@@ -28,20 +28,18 @@ package outbitstream
 
 import (
 	"encoding/binary"
+	"encoding/hex"
+	"fmt"
 	"testing"
-
-	"github.com/piot/brook-go/src/outstream"
 )
 
-func setup() (OutBitStream, *outstream.OutStream) {
-	writer := outstream.New()
-
-	bitstream := New(writer)
-	return bitstream, writer
+func setup() OutBitStream {
+	bitstream := New(1024)
+	return bitstream
 }
 
 func TestWriteMoreThanThirtyBits(t *testing.T) {
-	bitstream, octetWriter := setup()
+	bitstream := setup()
 	firstErr := bitstream.WriteBits(0xcafed, 20)
 	if firstErr != nil {
 		t.Error(firstErr)
@@ -52,8 +50,8 @@ func TestWriteMoreThanThirtyBits(t *testing.T) {
 		t.Error(secondErr)
 	}
 
-	octets := octetWriter.Octets()
-	if len(octets) != 4 {
+	octets := bitstream.Octets()
+	if len(octets) != 5 {
 		t.Errorf("Wrong length:%d", len(octets))
 	}
 
@@ -90,7 +88,7 @@ func printBits(n uint32) string {
 }
 
 func TestWriteMoreThanThirtyBitsDebug(t *testing.T) {
-	_bitstream, octetWriter := setup()
+	_bitstream := setup()
 	bitstream := NewDebugStream(_bitstream)
 	firstErr := bitstream.WriteBits(0xcafed, 20)
 	if firstErr != nil {
@@ -102,8 +100,8 @@ func TestWriteMoreThanThirtyBitsDebug(t *testing.T) {
 		t.Error(secondErr)
 	}
 
-	octets := octetWriter.Octets()
-	if len(octets) != 4 {
+	octets := bitstream.Octets()
+	if len(octets) != 8 { // 20 + 11 + 16 + 11 = 58 bits, which equals 8 octets
 		t.Errorf("Wrong length:%d", len(octets))
 	}
 
@@ -115,7 +113,7 @@ func TestWriteMoreThanThirtyBitsDebug(t *testing.T) {
 
 }
 
-func checkOctetLength(t *testing.T, octetWriter *outstream.OutStream, expectedLength int) {
+func checkOctetLength(t *testing.T, octetWriter OutBitStream, expectedLength int) {
 	octets := octetWriter.Octets()
 	if len(octets) != expectedLength {
 		t.Errorf("Wrong length:%d expected %d", len(octets), expectedLength)
@@ -124,24 +122,58 @@ func checkOctetLength(t *testing.T, octetWriter *outstream.OutStream, expectedLe
 }
 
 func TestOctetLength(t *testing.T) {
-	bitstream, octetWriter := setup()
-	checkOctetLength(t, octetWriter, 0)
+	bitstream := setup()
+	checkOctetLength(t, bitstream, 0)
 	firstErr := bitstream.WriteBits(0xcafe, 32)
 	if firstErr != nil {
 		t.Error(firstErr)
 	}
+
+	fmt.Printf("after cafe %v", hex.Dump(bitstream.Octets()))
 
 	secondErr := bitstream.WriteBits(0x3, 2)
 	if secondErr != nil {
 		t.Error(secondErr)
 	}
 
+	fmt.Printf("after 3 %v", hex.Dump(bitstream.Octets()))
 	bitstream.Close()
 
-	checkOctetLength(t, octetWriter, 5)
+	checkOctetLength(t, bitstream, 5)
 
-	if octetWriter.Octets()[4] != 0xc0 {
-		t.Errorf("Didn't work")
+	if bitstream.Octets()[4] != 0xc0 {
+		t.Errorf("Didn't work %v", hex.Dump(bitstream.Octets()))
 	}
 
+}
+
+func TestRewind(t *testing.T) {
+	bitstream := setup()
+	firstErr := bitstream.WriteBits(0xcafed, 20)
+	if firstErr != nil {
+		t.Error(firstErr)
+	}
+	tell := bitstream.Tell()
+
+	overwriteErr := bitstream.WriteBits(0xffff, 14)
+	if overwriteErr != nil {
+		t.Error(overwriteErr)
+	}
+
+	octets := bitstream.Octets()
+	if len(octets) != 5 {
+		t.Errorf("Wrong length:%d", len(octets))
+	}
+
+	bitstream.Rewind(tell)
+	secondErr := bitstream.WriteBits(0xbeef, 16)
+	if secondErr != nil {
+		t.Error(secondErr)
+	}
+
+	readFromBuffer := binary.BigEndian.Uint32(octets)
+	const expected uint32 = 0xcafedbee
+	if readFromBuffer != expected {
+		t.Errorf("Expected %d got %d", expected, readFromBuffer)
+	}
 }
