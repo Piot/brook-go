@@ -24,58 +24,29 @@ SOFTWARE.
 
 */
 
-package bits
+package outstream
 
 import (
-	"strconv"
-	"strings"
+	"bytes"
+	"testing"
 )
 
-func stripEverythingExceptZeroAndOne(str string) string {
-	return strings.Map(func(r rune) rune {
-		if r != '0' && r != '1' {
-			return -1
-		}
-		return r
-	}, str)
-}
+func Test16and32bit(t *testing.T) {
+	octets := []byte{0xca, 0xfe, 0xde, 0xad, 0xc0, 0xde}
+	stream := New()
 
-func FromString(bitString string) ([]byte, uint) {
-	bitString = stripEverythingExceptZeroAndOne(bitString)
-	bitCount := len(bitString)
-	remaining := bitCount % 8
-	if remaining != 0 {
-		bitString += strings.Repeat("0", 8-remaining)
+	err1 := stream.WriteUint16(51966)
+	if err1 != nil {
+		t.Error(err1)
 	}
 
-	octetCount := len(bitString) / 8
-	b := make([]byte, octetCount)
-	for i := 0; i < octetCount; i++ {
-		octetString := bitString[i*8 : i*8+8]
-		octetIntValue, _ := strconv.ParseUint(octetString, 2, 8)
-		b[i] = byte(octetIntValue)
+	err2 := stream.WriteUint32(3735929054)
+	if err2 != nil {
+		t.Error(err1)
 	}
 
-	return b, uint(bitCount)
-}
-
-func ToString(octets []byte) string {
-	s := ""
-	for i := 0; i < len(octets); i++ {
-		o := octets[i]
-		for j := 0; j < 8; j++ {
-			if j == 4 {
-				s += "_"
-			}
-			testMask := uint(1 << uint(7-j))
-			if uint(o)&testMask != 0 {
-				s += "1"
-			} else {
-				s += "0"
-			}
-		}
-		s += " "
+	createdOctets := stream.Octets()
+	if !bytes.Equal(octets, createdOctets) {
+		t.Errorf("Not equal")
 	}
-
-	return s
 }
