@@ -29,12 +29,10 @@ package outbitstream
 
 import (
 	"github.com/piot/brook-go/src/inbitstream"
-	"github.com/piot/brook-go/src/instream"
 )
 
 func CopyFromOctets(targetStream OutBitStream, octets []byte, bitCountToCopy uint) error {
-	octetReader := instream.New(octets)
-	bitstreamToReadFrom := inbitstream.New(octetReader, bitCountToCopy)
+	bitstreamToReadFrom := inbitstream.New(octets, bitCountToCopy)
 
 	return targetStream.WriteBitsFromStream(bitstreamToReadFrom, bitCountToCopy)
 }
