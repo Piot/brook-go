@@ -42,6 +42,10 @@ func (o *OutBitStreamDebug) Tell() uint {
 	return o.stream.Tell()
 }
 
+func (o *OutBitStreamDebug) Rewind(position uint) error {
+	return o.stream.Rewind(position)
+}
+
 func (o *OutBitStreamDebug) Close() {
 	o.stream.Close()
 }
@@ -97,4 +101,12 @@ func (o *OutBitStreamDebug) WriteUint8(v uint8) error {
 func (o *OutBitStreamDebug) writeType(t int, bitCount uint) {
 	o.stream.WriteBits(uint32(t), 4)
 	o.stream.WriteBits(uint32(bitCount), 7)
+}
+
+func (o *OutBitStreamDebug) Octets() []byte {
+	return o.stream.Octets()
+}
+
+func (o *OutBitStreamDebug) CopyOctets(target []byte) uint {
+	return o.stream.CopyOctets(target)
 }

@@ -43,5 +43,10 @@ type InBitStream interface {
 	// ReadUint8 : Read unsigned 8-bit from stream
 	ReadUint8() (uint8, error)
 
+	Skip(count uint) error
+	Seek(position uint) error
+
 	IsEOF() bool
+
+	Octets() []byte
 }

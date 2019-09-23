@@ -36,8 +36,17 @@ type OutBitStream interface {
 	// Get the bit position in the stream
 	Tell() uint
 
+	// Rewinds to the specified position and marks that as the end
+	Rewind(position uint) error
+
 	// Close flushes the latest changes and closes the stream
 	Close()
+
+	// Close flushes the latest changes and closes the stream
+	Octets() []byte
+
+	// Copy octets
+	CopyOctets(target []byte) uint
 
 	// WriteBitsFromStream copy bits from another stream
 	WriteBitsFromStream(in inbitstream.InBitStream, bitCount uint) error

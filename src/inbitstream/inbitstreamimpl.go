@@ -29,33 +29,47 @@ package inbitstream
 
 import (
 	"fmt"
-	"io"
-
-	"github.com/piot/brook-go/src/instream"
 )
 
 // InBitStreamImpl : Read bit stream
 type InBitStreamImpl struct {
-	octetReader           *instream.InStream
+	octets                []byte
 	remainingBits         uint
 	data                  uint32
 	remainingBitsInStream uint
 	position              uint
 	tell                  uint
+	octetReadPosition     int
 }
 
 // New : Creates an input bit stream
-func New(octetReader *instream.InStream, bitCount uint) *InBitStreamImpl {
-	stream := InBitStreamImpl{octetReader: octetReader, data: 0, remainingBits: 0, remainingBitsInStream: bitCount, position: 0}
+func New(octets []byte, bitCount uint) *InBitStreamImpl {
+	stream := InBitStreamImpl{octets: octets, data: 0, remainingBits: 0, remainingBitsInStream: bitCount, position: 0}
 	return &stream
 }
 
-func NewWithOption(octetReader *instream.InStream, bitCount uint, useDebugStream bool) InBitStream {
-	s := New(octetReader, bitCount)
+func NewWithOption(octets []byte, bitCount uint, useDebugStream bool) InBitStream {
+	s := New(octets, bitCount)
 	if useDebugStream {
 		return NewDebugStream(s)
 	}
 	return s
+}
+
+func (s *InBitStreamImpl) Octets() []byte {
+	return s.octets
+}
+
+func (s *InBitStreamImpl) Seek(position uint) error {
+	if position != 0 {
+		return fmt.Errorf("Only seek to zero now")
+	}
+	s.remainingBits = 0
+	s.octetReadPosition = 0
+	s.position = 0
+	s.data = 0
+	s.fill()
+	return nil
 }
 
 func (s *InBitStreamImpl) IsEOF() bool {
@@ -71,7 +85,7 @@ func (s *InBitStreamImpl) readOnce(bitsToRead uint) (uint32, error) {
 		return 0, nil
 	}
 
-	if bitsToRead > s.remainingBits {
+	if bitsToRead > s.remainingBitsInStream {
 		return 0, &EOFError{Count: bitsToRead, Tell: s.tell}
 	}
 
@@ -89,30 +103,43 @@ func (s *InBitStreamImpl) Tell() uint {
 }
 
 func (s *InBitStreamImpl) fill() error {
-	maxOctetsToRead := uint(4)
+	maxOctetsToRead := int(4)
 	newData := uint32(0)
-	octetsRead := 0
-	for i := uint(0); i < maxOctetsToRead; i++ {
-		octet, readOctetErr := s.octetReader.ReadUint8()
-		if readOctetErr != nil {
-			if readOctetErr == io.EOF {
-				break
-			}
-			return readOctetErr
-		}
-		octetsRead++
-		octetValue := uint32(octet)
-		newData <<= 8
-		newData |= octetValue
+	remainingOctetCount := len(s.octets) - s.octetReadPosition
+	if remainingOctetCount <= 0 {
+		return &EOFError{}
 	}
-
+	octetCountToRead := maxOctetsToRead
+	if octetCountToRead > remainingOctetCount {
+		octetCountToRead = remainingOctetCount
+	}
+	for i := 0; i < octetCountToRead; i++ {
+		octet := s.octets[s.octetReadPosition+i]
+		rotateCount := uint((3 - i) * 8)
+		rotatedOctet := uint32(octet) << rotateCount
+		newData |= rotatedOctet
+	}
+	s.octetReadPosition += octetCountToRead
 	s.data = newData
-	s.remainingBits = uint(octetsRead * 8)
+	s.remainingBits = 32
 	return nil
 }
 
 func (s *InBitStreamImpl) ReadRawBits(count uint) (uint32, error) {
 	return s.ReadBits(count)
+}
+
+func (s *InBitStreamImpl) Skip(count uint) error {
+	dwordCount := count / 32
+	restBitCount := count % 32
+	for i := uint(0); i < dwordCount; i++ {
+		_, dwordErr := s.ReadRawBits(32)
+		if dwordErr != nil {
+			return dwordErr
+		}
+	}
+	_, err := s.ReadRawBits(restBitCount)
+	return err
 }
 
 // ReadBits : Read bits from stream
@@ -204,5 +231,5 @@ func (s *InBitStreamImpl) ReadUint8() (uint8, error) {
 }
 
 func (s *InBitStreamImpl) String() string {
-	return fmt.Sprintf("[inbitstream buf:%v]", s.octetReader)
+	return fmt.Sprintf("[inbitstream buf:%v]", s.octets)
 }

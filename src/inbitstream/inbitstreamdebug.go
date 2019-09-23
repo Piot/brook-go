@@ -106,6 +106,18 @@ func (i *InBitStreamDebug) ReadBits(count uint) (uint32, error) {
 	return i.stream.ReadBits(count)
 }
 
+func (i *InBitStreamDebug) Seek(position uint) error {
+	return i.stream.Seek(position)
+}
+
+func (i *InBitStreamDebug) Skip(count uint) error {
+	return i.stream.Skip(count)
+}
+
+func (i *InBitStreamDebug) Octets() []byte {
+	return i.stream.Octets()
+}
+
 // ReadSignedBits : Read signed bits from stream
 func (i *InBitStreamDebug) ReadSignedBits(count uint) (int32, error) {
 	checkErr := i.checkType(6, count)

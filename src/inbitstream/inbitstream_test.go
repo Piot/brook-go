@@ -28,13 +28,10 @@ package inbitstream
 
 import (
 	"testing"
-
-	"github.com/piot/brook-go/src/instream"
 )
 
 func setupWithArray(octets []byte) InBitStream {
-	reader := instream.New(octets)
-	bitstream := New(reader, 8*8)
+	bitstream := New(octets, 8*8)
 	return bitstream
 }
 
