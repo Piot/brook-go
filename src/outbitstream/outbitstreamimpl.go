@@ -64,10 +64,17 @@ func maskFromCount(count uint) uint32 {
 	return (1 << uint(count)) - 1
 }
 
-func (s *OutBitStreamImpl) writeAccumulatorToArray() {
+func (s *OutBitStreamImpl) writeAccumulatorToArray() error {
+	if s.octetPosition+4 >= uint(len(s.octetArray)) {
+		return fmt.Errorf("write accumulator: octet positions outside octet array (%v out of %v)",
+			s.octetPosition+4, len(s.octetArray))
+	}
+
 	unusedBitCount := 32 - s.bitsInAccumulator
 	dwordToWrite := s.ac << unusedBitCount
 	binary.BigEndian.PutUint32(s.octetArray[s.octetPosition:s.octetPosition+4], dwordToWrite)
+
+	return nil
 }
 
 // Tell :
@@ -77,11 +84,16 @@ func (s *OutBitStreamImpl) Tell() uint {
 
 // Rewind :
 func (s *OutBitStreamImpl) Rewind(position uint) error {
-	s.writeAccumulatorToArray()
+	if s.octetPosition+4 < uint(len(s.octetArray)) {
+		flushErr := s.writeAccumulatorToArray()
+		if flushErr != nil {
+			return fmt.Errorf("rewind: %w", flushErr)
+		}
+	}
 	s.bitPosition = position
 	s.octetPosition = position / 32
-	if s.octetPosition >= uint(len(s.octetArray)) {
-		return fmt.Errorf("seeked too far %v vs %v", position, len(s.octetArray)*32)
+	if s.octetPosition+4 > uint(len(s.octetArray)) {
+		return fmt.Errorf("seeked too far %v vs %v", position, len(s.octetArray)*8)
 	}
 	a := binary.BigEndian.Uint32(s.octetArray[s.octetPosition : s.octetPosition+4])
 	bitCountToUse := position % 32
@@ -150,7 +162,10 @@ func (s *OutBitStreamImpl) WriteBits(v uint32, count uint) error {
 		shiftValue := count - bitCountLeftInAc
 		ov := v >> shiftValue
 		s.addBitsToAccumulator(ov, bitCountLeftInAc)
-		s.writeAccumulatorToArray()
+		flushErr := s.writeAccumulatorToArray()
+		if flushErr != nil {
+			return fmt.Errorf("WriteBits: %w", flushErr)
+		}
 		s.octetPosition += 4
 		s.bitsInAccumulator = 0
 		s.ac = 0
