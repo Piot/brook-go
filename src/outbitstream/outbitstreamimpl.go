@@ -91,7 +91,8 @@ func (s *OutBitStreamImpl) Rewind(position uint) error {
 		}
 	}
 	s.bitPosition = position
-	s.octetPosition = position / 32
+	dwordPosition := position / 32
+	s.octetPosition = dwordPosition * 4
 	if s.octetPosition+4 > uint(len(s.octetArray)) {
 		return fmt.Errorf("seeked too far %v vs %v", position, len(s.octetArray)*8)
 	}
