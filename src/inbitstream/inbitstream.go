@@ -49,4 +49,6 @@ type InBitStream interface {
 	IsEOF() bool
 
 	Octets() []byte
+
+	String() string
 }

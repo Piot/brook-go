@@ -231,5 +231,5 @@ func (s *InBitStreamImpl) ReadUint8() (uint8, error) {
 }
 
 func (s *InBitStreamImpl) String() string {
-	return fmt.Sprintf("[inbitstream buf:%v]", s.octets)
+	return fmt.Sprintf("[inbitstream pos:%v remainingbits %v]", s.tell, s.remainingBitsInStream)
 }

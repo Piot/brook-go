@@ -171,3 +171,7 @@ func (i *InBitStreamDebug) ReadUint8() (uint8, error) {
 	}
 	return i.stream.ReadUint8()
 }
+
+func (i *InBitStreamDebug) String() string {
+	return fmt.Sprintf("[bitstreamdebug %v]", i.stream)
+}
